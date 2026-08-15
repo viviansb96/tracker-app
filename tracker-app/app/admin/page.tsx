@@ -1,12 +1,18 @@
 "use client";
 import { useState, useEffect } from "react";
 
+interface Usuario {
+  id: string;
+  nome: string;
+  latitude: number | null;
+  longitude: number | null;
+}
+
 export default function AdminPage() {
-  const [usuarios, setUsuarios] = useState([]);
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [nome, setNome] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Criamos uma função separada para poder recarregar a tabela facilmente
   const carregarUsuarios = () => {
     fetch("/api/usuarios")
       .then((res) => res.json())
@@ -20,9 +26,9 @@ export default function AdminPage() {
     carregarUsuarios();
   }, []);
 
-  const cadastrarUsuario = async (e) => {
+  const cadastrarUsuario = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true); // Evita cliques duplos
+    setLoading(true);
     
     try {
       const res = await fetch("/api/usuarios", {
@@ -33,18 +39,18 @@ export default function AdminPage() {
       const data = await res.json();
       
       if (data.error) {
-        alert("Erro no servidor: " + data.error); // Agora você saberá se falhou
+        alert("Erro no servidor: " + data.error);
       } else if (data.usuario) {
         setNome("");
-        carregarUsuarios(); // Recarrega a tabela para mostrar o novo cadastro
+        carregarUsuarios();
       }
     } catch (error) {
-      alert("Erro ao conectar com a API. Verifique o terminal.");
+      alert("Erro ao conectar com a API.");
     }
     setLoading(false);
   };
 
-  const copiarLink = (id) => {
+  const copiarLink = (id: string) => {
     const link = `${window.location.origin}/?uid=${id}`;
     navigator.clipboard.writeText(link);
     alert("Link copiado com sucesso!\nEnvie para o usuário abrir: \n" + link);
@@ -75,7 +81,6 @@ export default function AdminPage() {
 
         <h2 className="text-xl font-semibold mb-4 text-gray-700">Usuários e Localizações</h2>
         
-        {/* Tabela com rolagem horizontal no celular (overflow-x-auto) */}
         <div className="overflow-x-auto shadow-sm rounded-lg">
           <table className="w-full text-left border-collapse bg-white border border-gray-200">
             <thead className="bg-gray-100">
@@ -90,12 +95,9 @@ export default function AdminPage() {
               {usuarios.map((user) => (
                 <tr key={user.id} className="hover:bg-gray-50">
                   <td className="p-3 border-b border-gray-200 font-medium">{user.nome}</td>
-                  
-                  {/* ID truncado para não quebrar o layout no celular */}
                   <td className="p-3 border-b border-gray-200 text-sm text-gray-500 max-w-[80px] truncate">
                     {user.id}
                   </td>
-                  
                   <td className="p-3 border-b border-gray-200">
                     {user.latitude && user.longitude ? (
                       <a 
@@ -110,7 +112,6 @@ export default function AdminPage() {
                       <span className="text-orange-500 text-sm font-medium">Aguardando...</span>
                     )}
                   </td>
-                  
                   <td className="p-3 border-b border-gray-200">
                     <button 
                       onClick={() => copiarLink(user.id)}
@@ -124,7 +125,7 @@ export default function AdminPage() {
               
               {usuarios.length === 0 && (
                 <tr>
-                  <td colSpan="4" className="p-6 text-center text-gray-500 italic">
+                  <td colSpan={4} className="p-6 text-center text-gray-500 italic">
                     Nenhum usuário cadastrado ainda.
                   </td>
                 </tr>
