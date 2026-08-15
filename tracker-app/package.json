@@ -10,9 +10,9 @@
   },
   "dependencies": {
     "@vercel/postgres": "^0.10.0",
-    "next": "16.3.1",
-    "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "next": "15.0.3",
+    "react": "19.0.0-rc",
+    "react-dom": "19.0.0-rc"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
