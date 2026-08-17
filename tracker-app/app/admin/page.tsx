@@ -59,149 +59,162 @@ export default function AdminPage() {
     setLoading(false);
   };
 
-  const excluirUsuario = async (id: string, nomeUsuario: string) => {
-    // Pede confirmação antes de apagar
-    if (!window.confirm(`Tem certeza que deseja apagar os dados de ${nomeUsuario}?`)) return;
+  const excluirUsuario = async (id: string, identificador: string) => {
+    if (!window.confirm(`Tem certeza que deseja apagar o rastreio de: ${identificador}?`)) return;
 
     try {
       const res = await fetch(`/api/usuarios?id=${id}`, { method: "DELETE" });
       if (res.ok) {
-        carregarUsuarios(); // Recarrega a tabela após apagar
+        carregarUsuarios();
       } else {
         alert("Falha ao excluir.");
       }
     } catch (error) {
-      alert("Erro ao excluir usuário.");
+      alert("Erro ao excluir registro.");
     }
   };
 
   const copiarLink = (id: string) => {
     const link = `${window.location.origin}/?uid=${id}`;
     navigator.clipboard.writeText(link);
-    alert("Link copiado com sucesso!\nEnvie para o usuário abrir: \n" + link);
+    alert("Link copiado com sucesso!\nEnvie este link para o cliente/entregador abrir.");
   };
 
-  // Função para formatar a data/hora para o padrão brasileiro
   const formatarData = (dataIso: string | null) => {
-    if (!dataIso) return "Sem registro";
-    return new Date(dataIso).toLocaleString("pt-BR", {
-      day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit"
-    });
+    if (!dataIso) return "--:--";
+    const data = new Date(dataIso);
+    return `${data.toLocaleDateString("pt-BR", { day: '2-digit', month: 'short' })} • ${data.toLocaleTimeString("pt-BR", { hour: '2-digit', minute: '2-digit' })}`;
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 text-black p-4 md:p-8 font-sans">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Painel de Entregas</h1>
-          <button 
-            onClick={carregarUsuarios}
-            disabled={atualizando}
-            className="flex items-center gap-2 bg-white hover:bg-gray-100 text-gray-700 px-4 py-2 rounded shadow-sm font-semibold transition border border-gray-200"
-          >
-            {atualizando ? "⏳ Atualizando..." : "🔄 Atualizar Dados"}
-          </button>
-        </div>
+    <div className="min-h-screen bg-[#EBE5E5] flex justify-center items-start md:p-6 lg:p-10 font-sans">
+      
+      {/* Container Principal: Responsivo (expande até max-w-7xl no desktop) */}
+      <div className="bg-white w-full max-w-7xl md:rounded-[2.5rem] shadow-2xl overflow-hidden min-h-screen md:min-h-0 relative">
         
-        {/* Formulário Atualizado */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
-          <h2 className="text-lg font-bold mb-4 text-gray-700">Novo Cliente/Entregador</h2>
-          <form onSubmit={cadastrarUsuario} className="flex flex-col sm:flex-row gap-4">
-            <input
-              type="text"
-              placeholder="Nome Completo *"
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-              className="border border-gray-300 p-3 rounded flex-1 text-black bg-white focus:ring-2 focus:ring-blue-500 outline-none"
-              required
-            />
-            <input
-              type="text"
-              placeholder="Apelido (Opcional)"
-              value={apelido}
-              onChange={(e) => setApelido(e.target.value)}
-              className="border border-gray-300 p-3 rounded flex-1 text-black bg-white focus:ring-2 focus:ring-blue-500 outline-none"
-            />
-            <button 
-              type="submit" 
-              disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded font-bold transition disabled:opacity-50"
-            >
-              {loading ? "Salvando..." : "Cadastrar e Gerar Link"}
+        {/* HEADER */}
+        <div className="bg-[#930B0B] text-white pt-10 pb-8 px-6 md:px-12 relative rounded-b-[2rem] shadow-md z-10">
+          <div className="flex justify-between items-center mb-4 max-w-5xl mx-auto">
+            {/* Ícone Voltar/Menu (decorativo para manter o design) */}
+            <button className="text-white hover:text-gray-200 transition-colors">
+              <svg className="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7"></path></svg>
             </button>
-          </form>
+            {/* Botão de Atualizar Responsivo */}
+            <button onClick={carregarUsuarios} disabled={atualizando} className="text-white hover:text-gray-200 transition-colors flex items-center gap-2">
+              <span className="hidden md:inline font-semibold text-sm">Atualizar</span>
+              <svg className={`w-7 h-7 md:w-8 md:h-8 ${atualizando ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+          </div>
+          
+          <div className="text-center mt-2 max-w-xl mx-auto">
+            <div className="w-20 h-20 md:w-24 md:h-24 bg-white/20 rounded-full mx-auto flex items-center justify-center border-2 border-white/50 mb-4 shadow-sm">
+              <svg className="w-10 h-10 md:w-12 md:h-12 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"></path></svg>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-semibold tracking-wide">Rastreamento</h1>
+            <p className="text-[#FFC2C2] text-sm md:text-base mt-2 font-light">Monitoramento em tempo real de clientes e entregadores</p>
+          </div>
         </div>
 
-        <h2 className="text-xl font-semibold mb-4 text-gray-700">Rastreamentos Ativos</h2>
-        
-        <div className="overflow-x-auto shadow-sm rounded-lg bg-white border border-gray-200">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-gray-100 text-gray-700">
-              <tr>
-                <th className="p-4 border-b">Identificação</th>
-                <th className="p-4 border-b text-center">Última Posição</th>
-                <th className="p-4 border-b text-center">Localização</th>
-                <th className="p-4 border-b text-center">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {usuarios.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50 transition">
-                  <td className="p-4">
-                    <p className="font-bold text-gray-900">{user.nome}</p>
-                    {user.apelido && <p className="text-sm text-blue-600 font-medium">@{user.apelido}</p>}
-                    <p className="text-xs text-gray-400 mt-1">ID: {user.id.split('-')[0]}</p>
-                  </td>
-                  
-                  <td className="p-4 text-center text-sm font-medium text-gray-600">
-                    {formatarData(user.ultima_atualizacao)}
-                  </td>
+        {/* CORPO DA PÁGINA */}
+        <div className="px-6 md:px-12 py-8 md:py-10 pb-24 max-w-7xl mx-auto">
+          
+          {/* FORMULÁRIO RESPONSIVO */}
+          <form onSubmit={cadastrarUsuario} className="mb-10 bg-[#F4EBEB] p-5 md:p-8 rounded-3xl shadow-sm">
+            {/* No celular: coluna (flex-col). No desktop: linha (md:flex-row) */}
+            <div className="flex flex-col md:flex-row gap-4 items-center">
+              <input
+                type="text"
+                placeholder="Identificador"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                className="bg-white text-[#7A1515] placeholder-[#C2A3A3] text-center font-medium rounded-full px-6 py-4 w-full focus:outline-none shadow-sm md:text-lg transition-all border-2 border-transparent focus:border-[#C2A3A3]"
+                required
+              />
+              <input
+                type="text"
+                placeholder="Nome (Opcional)"
+                value={apelido}
+                onChange={(e) => setApelido(e.target.value)}
+                className="bg-white text-[#7A1515] placeholder-[#C2A3A3] text-center font-medium rounded-full px-6 py-4 w-full focus:outline-none shadow-sm md:text-lg transition-all border-2 border-transparent focus:border-[#C2A3A3]"
+              />
+              <button 
+                type="submit" 
+                disabled={loading}
+                className="w-full md:w-auto md:min-w-[200px] bg-[#930B0B] text-white rounded-full py-4 px-8 font-bold text-lg shadow-lg shadow-red-900/30 transition-transform active:scale-95 disabled:opacity-70 whitespace-nowrap"
+              >
+                {loading ? "Criando..." : "Gerar Rastreio"}
+              </button>
+            </div>
+          </form>
 
-                  <td className="p-4 text-center">
+          {/* LISTA DE USUÁRIOS (GRID RESPONSIVO) */}
+          {/* No celular: 1 coluna. No tablet: 2 colunas. No desktop grande: 3 colunas. */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {usuarios.map((user) => (
+              <div key={user.id} className="bg-[#F4EBEB] rounded-[1.5rem] p-6 flex flex-col shadow-sm hover:shadow-md transition-shadow">
+                
+                {/* Cabeçalho do Cartão */}
+                <div className="flex justify-between items-start border-b border-[#E0CACA] pb-4 mb-4">
+                  <div className="overflow-hidden pr-2">
+                    <h3 className="font-bold text-[#6B1111] text-lg truncate" title={user.nome}>{user.nome}</h3>
+                    {user.apelido && <p className="text-sm font-semibold text-[#930B0B] truncate" title={user.apelido}>{user.apelido}</p>}
+                    <p className="text-xs text-[#9E7A7A] mt-2 font-mono bg-white px-2 py-1 rounded-md inline-block shadow-sm">
+                      ID (link): {user.id.split('-')[0]}
+                    </p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-[10px] uppercase font-bold text-[#9E7A7A] tracking-wider">Última Posição</p>
+                    <p className="font-bold text-[#930B0B] text-sm mt-0.5 whitespace-nowrap">{formatarData(user.ultima_atualizacao)}</p>
+                  </div>
+                </div>
+
+                {/* Botões do Cartão - Responsivos internamente (flex-wrap) */}
+                <div className="flex flex-wrap items-center justify-between gap-3 mt-auto">
+                  <div className="flex-1 min-w-[130px]">
                     {user.latitude && user.longitude ? (
                       <a 
                         href={`https://www.google.com/maps/search/?api=1&query=${user.latitude},${user.longitude}`} 
                         target="_blank" 
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1 bg-green-100 text-green-700 hover:bg-green-200 px-3 py-1.5 rounded-full text-sm font-bold transition"
+                        className="flex items-center justify-center gap-2 w-full bg-[#2D9596] text-white px-4 py-2.5 rounded-full text-sm font-bold shadow-md transition-transform active:scale-95"
                       >
-                        📍 Ver no Mapa
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"></path></svg>
+                        Ver Mapa
                       </a>
                     ) : (
-                      <span className="text-orange-500 text-sm font-medium animate-pulse">Aguardando GPS...</span>
+                      <div className="flex items-center justify-center gap-2 w-full bg-white text-[#9E7A7A] px-4 py-2.5 rounded-full text-sm font-bold border border-[#E0CACA]">
+                        Aguardando...
+                      </div>
                     )}
-                  </td>
+                  </div>
+                  
+                  <button 
+                    onClick={() => copiarLink(user.id)}
+                    className="flex-1 min-w-[100px] flex justify-center bg-white text-[#6B1111] border-2 border-[#6B1111] px-4 py-2 rounded-full text-sm font-bold shadow-sm transition-transform active:scale-95"
+                  >
+                    Copiar
+                  </button>
+                  
+                  <button 
+                    onClick={() => excluirUsuario(user.id, user.nome)}
+                    className="w-10 h-10 flex items-center justify-center bg-[#930B0B] text-white rounded-full shadow-md transition-transform active:scale-95 flex-shrink-0"
+                    title="Excluir Registro"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                  </button>
+                </div>
+              </div>
+            ))}
 
-                  <td className="p-4 text-center">
-                    <div className="flex flex-col sm:flex-row gap-2 justify-center">
-                      <button 
-                        onClick={() => copiarLink(user.id)}
-                        className="bg-gray-800 hover:bg-black text-white px-3 py-1.5 rounded text-sm transition font-bold"
-                      >
-                        Copiar Link
-                      </button>
-                      <button 
-                        onClick={() => excluirUsuario(user.id, user.apelido || user.nome)}
-                        className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-1.5 rounded text-sm transition font-bold"
-                        title="Excluir Registro"
-                      >
-                        Excluir
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              
-              {usuarios.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="p-8 text-center text-gray-500">
-                    Nenhum cliente ou entregador ativo no momento.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+            {usuarios.length === 0 && (
+              <div className="col-span-1 md:col-span-2 lg:col-span-3 bg-transparent border-2 border-dashed border-[#C2A3A3] p-12 rounded-3xl text-center">
+                <p className="text-[#9E7A7A] font-bold text-xl">Nenhum registro ativo</p>
+                <p className="text-[#9E7A7A] mt-2">Preencha o formulário acima para gerar o primeiro link de rastreio.</p>
+              </div>
+            )}
+          </div>
         </div>
+
       </div>
     </div>
   );
