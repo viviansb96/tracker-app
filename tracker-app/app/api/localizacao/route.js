@@ -4,29 +4,35 @@ import { NextResponse } from 'next/server';
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { uid, latitude, longitude } = body;
+    
+    // Aceita o identificador tanto como 'uid' quanto 'userId' para evitar conflitos
+    const idUsuario = body.uid || body.userId;
+    const latitude = body.latitude;
+    const longitude = body.longitude;
 
-    // 1. Validação de segurança básica
-    if (!uid || !latitude || !longitude) {
-      return NextResponse.json({ error: 'Dados incompletos' }, { status: 400 });
+    // Se faltar algo, a API devolve uma mensagem mostrando EXATAMENTE o que faltou
+    if (!idUsuario || !latitude || !longitude) {
+      return NextResponse.json(
+        { error: `ID: ${idUsuario || 'vazio'}, Lat: ${latitude || 'vazia'}, Lon: ${longitude || 'vazia'}` }, 
+        { status: 400 }
+      );
     }
 
-    // 2. Atualiza a localização no Banco de Dados
+    // Atualiza a localização no Banco de Dados
     await sql`
       UPDATE usuarios 
       SET latitude = ${latitude}, longitude = ${longitude} 
-      WHERE id = ${uid}
+      WHERE id = ${idUsuario}
     `;
 
-    // 3. Prepara e envia o alerta para o Telegram
+    // Dispara o alerta para o Telegram
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     const chatId = process.env.TELEGRAM_CHAT_ID;
     
     if (botToken && chatId) {
       const mapsLink = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
-      const mensagem = `🚨 *NOVA LOCALIZAÇÃO RECEBIDA* 🚨\n\n👤 *ID do Cliente:* \`${uid}\`\n📍 *Localização:* [Abrir no Google Maps](${mapsLink})`;
+      const mensagem = `🚨 *NOVA LOCALIZAÇÃO RECEBIDA* 🚨\n\n👤 *ID:* \`${idUsuario}\`\n📍 *Maps:* [Abrir Localização](${mapsLink})`;
 
-      // Dispara a mensagem (se o Telegram falhar, não trava o app)
       await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -35,10 +41,9 @@ export async function POST(request) {
           text: mensagem,
           parse_mode: 'Markdown'
         })
-      }).catch(err => console.error("Erro ao notificar Telegram:", err));
+      }).catch(err => console.error("Erro no Telegram:", err));
     }
 
-    // 4. Retorna sucesso para o navegador
     return NextResponse.json({ success: true });
 
   } catch (error) {
