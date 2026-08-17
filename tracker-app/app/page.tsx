@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 
 export default function HomePage() {
-  const [status, setStatus] = useState("Aguardando permissão...");
+  const [status, setStatus] = useState("");
   // CORREÇÃO: Avisamos ao TypeScript que o erro pode ser um texto (string) ou nulo (null)
   const [erro, setErro] = useState<string | null>(null); 
 
@@ -64,12 +64,12 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 text-center font-sans">
       <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 max-w-sm w-full">
-        <h1 className="text-xl font-bold text-gray-800 mb-6">Compartilhamento de Localização</h1>
+        <h1 className="text-xl font-bold text-gray-800 mb-6"></h1>
         
         <div className="mb-4">
-          {status === "Localização registrada com sucesso!" ? (
+          {status === "" ? (
              <p className="text-2xl">✅</p>
-          ) : status === "Registrando localização, por favor aguarde..." ? (
+          ) : status === "" ? (
              <p className="text-2xl animate-spin">⏳</p>
           ) : (
              <p className="text-2xl">📍</p>
@@ -77,7 +77,7 @@ export default function HomePage() {
         </div>
 
         <p className={`text-lg font-semibold ${
-          status === "Localização registrada com sucesso!" ? "text-green-600" : "text-blue-600"
+          status === "" ? "text-green-600" : "text-blue-600"
         }`}>
           {status}
         </p>
@@ -88,7 +88,7 @@ export default function HomePage() {
           </p>
         )}
 
-        {status === "Localização registrada com sucesso!" && (
+        {status === "" && (
           <p className="text-gray-500 text-sm mt-6">
             Pode fechar esta página.
           </p>
