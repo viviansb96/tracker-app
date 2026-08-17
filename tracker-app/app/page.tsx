@@ -2,7 +2,8 @@
 import { useEffect, useState } from "react";
 
 export default function HomePage() {
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useState("Aguardando permissão...");
+  // CORREÇÃO: Avisamos ao TypeScript que o erro pode ser um texto (string) ou nulo (null)
   const [erro, setErro] = useState<string | null>(null); 
 
   useEffect(() => {
@@ -32,8 +33,7 @@ export default function HomePage() {
           const res = await fetch("/api/localizacao", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            // CORREÇÃO 1: Enviando 'uid' exatamente como a API espera
-            body: JSON.stringify({ uid, latitude, longitude }),
+            body: JSON.stringify({ userId: uid, latitude, longitude }),
           });
 
           if (res.ok) {
@@ -49,6 +49,7 @@ export default function HomePage() {
         }
       },
       (error) => {
+        // Trata os possíveis erros do usuário negar o GPS
         setStatus("Permissão negada ou falha.");
         if (error.code === 1) {
           setErro("Você precisa permitir o acesso à localização para continuar.");
@@ -56,30 +57,29 @@ export default function HomePage() {
           setErro(error.message);
         }
       },
-      { enableHighAccuracy: true }
+      { enableHighAccuracy: true } // Força o GPS real do celular
     );
   }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 text-center font-sans">
       <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 max-w-sm w-full">
-        <h1 className="text-xl font-bold text-gray-800 mb-6">Compartilhar Localização</h1>
+        <h1 className="text-xl font-bold text-gray-800 mb-6">Compartilhamento de Localização</h1>
         
         <div className="mb-4">
-          {/* CORREÇÃO 2: Lógica visual corrigida com os textos exatos */}
           {status === "Localização registrada com sucesso!" ? (
-             <p className="text-4xl">✅</p>
+             <p className="text-2xl">✅</p>
           ) : status === "Registrando localização, por favor aguarde..." ? (
-             <p className="text-4xl animate-spin">⏳</p>
+             <p className="text-2xl animate-spin">⏳</p>
           ) : (
-             <p className="text-4xl">📍</p>
+             <p className="text-2xl">📍</p>
           )}
         </div>
 
         <p className={`text-lg font-semibold ${
           status === "Localização registrada com sucesso!" ? "text-green-600" : "text-blue-600"
         }`}>
-          {status || "Aguardando..."}
+          {status}
         </p>
 
         {erro && (
