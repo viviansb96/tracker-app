@@ -18,10 +18,10 @@ export async function POST(request) {
       );
     }
 
-    // Atualiza a localização no Banco de Dados
+  // Atualiza a localização e carimba o horário no Banco de Dados
     await sql`
       UPDATE usuarios 
-      SET latitude = ${latitude}, longitude = ${longitude} 
+      SET latitude = ${latitude}, longitude = ${longitude}, ultima_atualizacao = NOW()
       WHERE id = ${idUsuario}
     `;
 
