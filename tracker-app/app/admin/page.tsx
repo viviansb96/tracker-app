@@ -42,6 +42,7 @@ export default function AdminPage() {
       const res = await fetch("/api/usuarios", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        // A variável 'nome' envia o "Identificador" e 'apelido' envia o "Nome"
         body: JSON.stringify({ nome, apelido }),
       });
       const data = await res.json();
@@ -82,136 +83,139 @@ export default function AdminPage() {
 
   const formatarData = (dataIso: string | null) => {
     if (!dataIso) return "--:--";
-    const data = new Date(dataIso);
-    return `${data.toLocaleDateString("pt-BR", { day: '2-digit', month: 'short' })} • ${data.toLocaleTimeString("pt-BR", { hour: '2-digit', minute: '2-digit' })}`;
+    
+    // Adiciona o 'Z' para forçar o JavaScript a entender que a hora do banco é UTC
+    const dataUTC = dataIso.endsWith('Z') ? dataIso : `${dataIso}Z`;
+    const data = new Date(dataUTC);
+    
+    return `${data.toLocaleDateString("pt-BR", { day: '2-digit', month: '2-digit' })} às ${data.toLocaleTimeString("pt-BR", { hour: '2-digit', minute: '2-digit' })}`;
   };
 
   return (
-    <div className="min-h-screen bg-[#EBE5E5] flex justify-center items-start md:p-6 lg:p-10 font-sans">
-      
-      {/* Container Principal: Responsivo (expande até max-w-7xl no desktop) */}
-      <div className="bg-white w-full max-w-7xl md:rounded-[2.5rem] shadow-2xl overflow-hidden min-h-screen md:min-h-0 relative">
+    <div className="min-h-screen bg-slate-50 text-slate-800 p-4 md:p-8 font-sans selection:bg-indigo-100 selection:text-indigo-900">
+      <div className="max-w-6xl mx-auto space-y-8">
         
-        {/* HEADER */}
-        <div className="bg-[#930B0B] text-white pt-10 pb-8 px-6 md:px-12 relative rounded-b-[2rem] shadow-md z-10">
-          <div className="flex justify-between items-center mb-4 max-w-5xl mx-auto">
-            {/* Ícone Voltar/Menu (decorativo para manter o design) */}
-            <button className="text-white hover:text-gray-200 transition-colors">
-              <svg className="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7"></path></svg>
-            </button>
-            {/* Botão de Atualizar Responsivo */}
-            <button onClick={carregarUsuarios} disabled={atualizando} className="text-white hover:text-gray-200 transition-colors flex items-center gap-2">
-              <span className="hidden md:inline font-semibold text-sm">Atualizar</span>
-              <svg className={`w-7 h-7 md:w-8 md:h-8 ${atualizando ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-            </button>
+        {/* Cabeçalho */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-500">
+              Rastreamento
+            </h1>
+            <p className="text-slate-500 text-sm mt-1">Gerencie e monitore localizações em tempo real.</p>
           </div>
           
-          <div className="text-center mt-2 max-w-xl mx-auto">
-            <div className="w-20 h-20 md:w-24 md:h-24 bg-white/20 rounded-full mx-auto flex items-center justify-center border-2 border-white/50 mb-4 shadow-sm">
-              <svg className="w-10 h-10 md:w-12 md:h-12 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"></path></svg>
-            </div>
-            <h1 className="text-3xl md:text-4xl font-semibold tracking-wide">Rastreamento</h1>
-            <p className="text-[#FFC2C2] text-sm md:text-base mt-2 font-light">Monitoramento em tempo real de clientes e entregadores</p>
-          </div>
+          <button 
+            onClick={carregarUsuarios}
+            disabled={atualizando}
+            className="flex items-center gap-2 bg-white hover:bg-slate-100 text-slate-700 px-5 py-2.5 rounded-xl shadow-sm border border-slate-200 font-semibold transition-all active:scale-[0.98] disabled:opacity-70"
+          >
+            {atualizando ? "⏳ Atualizando..." : "🔄 Atualizar Dados"}
+          </button>
+        </div>
+        
+        {/* Formulário de Cadastro */}
+        <div className="bg-white p-6 md:p-8 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100">
+          <h2 className="text-lg font-bold mb-5 text-slate-800">Gerar Novo Link de Rastreio</h2>
+          <form onSubmit={cadastrarUsuario} className="flex flex-col md:flex-row gap-4">
+            <input
+              type="text"
+              placeholder="Identificador *"
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+              className="bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent block w-full p-3.5 transition-all outline-none"
+              required
+            />
+            <input
+              type="text"
+              placeholder="Nome (Opcional)"
+              value={apelido}
+              onChange={(e) => setApelido(e.target.value)}
+              className="bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent block w-full p-3.5 transition-all outline-none"
+            />
+            <button 
+              type="submit" 
+              disabled={loading}
+              className="bg-gradient-to-r from-indigo-600 to-blue-500 hover:from-indigo-700 hover:to-blue-600 text-white px-8 py-3.5 rounded-xl font-semibold shadow-lg shadow-indigo-200 transition-all active:scale-[0.98] disabled:opacity-70 whitespace-nowrap"
+            >
+              {loading ? "Criando..." : "Criar Registro"}
+            </button>
+          </form>
         </div>
 
-        {/* CORPO DA PÁGINA */}
-        <div className="px-6 md:px-12 py-8 md:py-10 pb-24 max-w-7xl mx-auto">
-          
-          {/* FORMULÁRIO RESPONSIVO */}
-          <form onSubmit={cadastrarUsuario} className="mb-10 bg-[#F4EBEB] p-5 md:p-8 rounded-3xl shadow-sm">
-            {/* No celular: coluna (flex-col). No desktop: linha (md:flex-row) */}
-            <div className="flex flex-col md:flex-row gap-4 items-center">
-              <input
-                type="text"
-                placeholder="Identificador"
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-                className="bg-white text-[#7A1515] placeholder-[#C2A3A3] text-center font-medium rounded-full px-6 py-4 w-full focus:outline-none shadow-sm md:text-lg transition-all border-2 border-transparent focus:border-[#C2A3A3]"
-                required
-              />
-              <input
-                type="text"
-                placeholder="Nome (Opcional)"
-                value={apelido}
-                onChange={(e) => setApelido(e.target.value)}
-                className="bg-white text-[#7A1515] placeholder-[#C2A3A3] text-center font-medium rounded-full px-6 py-4 w-full focus:outline-none shadow-sm md:text-lg transition-all border-2 border-transparent focus:border-[#C2A3A3]"
-              />
-              <button 
-                type="submit" 
-                disabled={loading}
-                className="w-full md:w-auto md:min-w-[200px] bg-[#930B0B] text-white rounded-full py-4 px-8 font-bold text-lg shadow-lg shadow-red-900/30 transition-transform active:scale-95 disabled:opacity-70 whitespace-nowrap"
-              >
-                {loading ? "Criando..." : "Gerar Rastreio"}
-              </button>
-            </div>
-          </form>
+        {/* Tabela de Dados */}
+        <div className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead className="bg-slate-50/80 text-slate-600 text-sm uppercase tracking-wider">
+                <tr>
+                  <th className="p-5 font-semibold border-b border-slate-100">Registro</th>
+                  <th className="p-5 font-semibold border-b border-slate-100 text-center">Última Posição</th>
+                  <th className="p-5 font-semibold border-b border-slate-100 text-center">Localização</th>
+                  <th className="p-5 font-semibold border-b border-slate-100 text-center">Ações</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {usuarios.map((user) => (
+                  <tr key={user.id} className="hover:bg-slate-50/50 transition-colors group">
+                    <td className="p-5">
+                      <p className="font-bold text-slate-900 text-base">{user.nome}</p>
+                      {user.apelido && <p className="text-sm text-indigo-600 font-semibold mt-0.5">{user.apelido}</p>}
+                      <p className="text-xs text-slate-400 mt-1.5 font-mono bg-slate-100 inline-block px-2 py-0.5 rounded-md">
+                        ID (link): {user.id.split('-')[0]}
+                      </p>
+                    </td>
+                    
+                    <td className="p-5 text-center text-sm font-medium text-slate-600 whitespace-nowrap">
+                      {formatarData(user.ultima_atualizacao)}
+                    </td>
 
-          {/* LISTA DE USUÁRIOS (GRID RESPONSIVO) */}
-          {/* No celular: 1 coluna. No tablet: 2 colunas. No desktop grande: 3 colunas. */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {usuarios.map((user) => (
-              <div key={user.id} className="bg-[#F4EBEB] rounded-[1.5rem] p-6 flex flex-col shadow-sm hover:shadow-md transition-shadow">
-                
-                {/* Cabeçalho do Cartão */}
-                <div className="flex justify-between items-start border-b border-[#E0CACA] pb-4 mb-4">
-                  <div className="overflow-hidden pr-2">
-                    <h3 className="font-bold text-[#6B1111] text-lg truncate" title={user.nome}>{user.nome}</h3>
-                    {user.apelido && <p className="text-sm font-semibold text-[#930B0B] truncate" title={user.apelido}>{user.apelido}</p>}
-                    <p className="text-xs text-[#9E7A7A] mt-2 font-mono bg-white px-2 py-1 rounded-md inline-block shadow-sm">
-                      ID (link): {user.id.split('-')[0]}
-                    </p>
-                  </div>
-                  <div className="text-right flex-shrink-0">
-                    <p className="text-[10px] uppercase font-bold text-[#9E7A7A] tracking-wider">Última Posição</p>
-                    <p className="font-bold text-[#930B0B] text-sm mt-0.5 whitespace-nowrap">{formatarData(user.ultima_atualizacao)}</p>
-                  </div>
-                </div>
+                    <td className="p-5 text-center">
+                      {user.latitude && user.longitude ? (
+                        <a 
+                          href={`https://www.google.com/maps/search/?api=1&query=${user.latitude},${user.longitude}`} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="inline-flex items-center justify-center gap-1.5 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm"
+                        >
+                          <span className="text-lg leading-none">📍</span> Abrir Mapa
+                        </a>
+                      ) : (
+                        <span className="inline-block bg-amber-100 text-amber-700 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider animate-pulse">
+                          Aguardando GPS
+                        </span>
+                      )}
+                    </td>
 
-                {/* Botões do Cartão - Responsivos internamente (flex-wrap) */}
-                <div className="flex flex-wrap items-center justify-between gap-3 mt-auto">
-                  <div className="flex-1 min-w-[130px]">
-                    {user.latitude && user.longitude ? (
-                      <a 
-                        href={`https://www.google.com/maps/search/?api=1&query=${user.latitude},${user.longitude}`} 
-                        target="_blank" 
-                        rel="noreferrer"
-                        className="flex items-center justify-center gap-2 w-full bg-[#2D9596] text-white px-4 py-2.5 rounded-full text-sm font-bold shadow-md transition-transform active:scale-95"
-                      >
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"></path></svg>
-                        Ver Mapa
-                      </a>
-                    ) : (
-                      <div className="flex items-center justify-center gap-2 w-full bg-white text-[#9E7A7A] px-4 py-2.5 rounded-full text-sm font-bold border border-[#E0CACA]">
-                        Aguardando...
+                    <td className="p-5 text-center">
+                      <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                        <button 
+                          onClick={() => copiarLink(user.id)}
+                          className="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm active:scale-[0.98]"
+                        >
+                          Copiar Link
+                        </button>
+                        <button 
+                          onClick={() => excluirUsuario(user.id, user.nome)}
+                          className="bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 px-4 py-2 rounded-lg text-sm font-semibold transition-all active:scale-[0.98]"
+                          title="Excluir Registro"
+                        >
+                          Excluir
+                        </button>
                       </div>
-                    )}
-                  </div>
-                  
-                  <button 
-                    onClick={() => copiarLink(user.id)}
-                    className="flex-1 min-w-[100px] flex justify-center bg-white text-[#6B1111] border-2 border-[#6B1111] px-4 py-2 rounded-full text-sm font-bold shadow-sm transition-transform active:scale-95"
-                  >
-                    Copiar
-                  </button>
-                  
-                  <button 
-                    onClick={() => excluirUsuario(user.id, user.nome)}
-                    className="w-10 h-10 flex items-center justify-center bg-[#930B0B] text-white rounded-full shadow-md transition-transform active:scale-95 flex-shrink-0"
-                    title="Excluir Registro"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                  </button>
-                </div>
-              </div>
-            ))}
-
-            {usuarios.length === 0 && (
-              <div className="col-span-1 md:col-span-2 lg:col-span-3 bg-transparent border-2 border-dashed border-[#C2A3A3] p-12 rounded-3xl text-center">
-                <p className="text-[#9E7A7A] font-bold text-xl">Nenhum registro ativo</p>
-                <p className="text-[#9E7A7A] mt-2">Preencha o formulário acima para gerar o primeiro link de rastreio.</p>
-              </div>
-            )}
+                    </td>
+                  </tr>
+                ))}
+                
+                {usuarios.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="p-12 text-center">
+                      <p className="text-slate-400 text-lg">Nenhum rastreamento ativo no momento.</p>
+                      <p className="text-slate-400 text-sm mt-1">Gere um novo link acima para começar.</p>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
 
