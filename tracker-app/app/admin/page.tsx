@@ -4,26 +4,39 @@ import { useState, useEffect } from "react";
 interface Usuario {
   id: string;
   nome: string;
-  latitude: number | null;
-  longitude: number | null;
+  latitude: string | null; // Alterado para string pois no banco criamos como VARCHAR
+  longitude: string | null;
 }
 
 export default function AdminPage() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [nome, setNome] = useState("");
   const [loading, setLoading] = useState(false);
+  const [atualizando, setAtualizando] = useState(false);
 
   const carregarUsuarios = () => {
-    fetch("/api/usuarios")
+    setAtualizando(true);
+    // Adicionamos um timestamp na URL e o cache: 'no-store' para forçar o Next a ignorar o cache e trazer dados novos
+    fetch(`/api/usuarios?t=${new Date().getTime()}`, { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {
           if (data.usuarios) setUsuarios(data.usuarios);
       })
-      .catch(err => console.error("Erro ao buscar usuários", err));
+      .catch(err => console.error("Erro ao buscar usuários", err))
+      .finally(() => setAtualizando(false));
   };
 
   useEffect(() => {
+    // Carrega na primeira vez que abre a página
     carregarUsuarios();
+
+    // Cria um "relógio" que atualiza a tabela a cada 10 segundos automaticamente
+    const intervalo = setInterval(() => {
+      carregarUsuarios();
+    }, 10000);
+
+    // Limpa o relógio se o usuário sair da página
+    return () => clearInterval(intervalo);
   }, []);
 
   const cadastrarUsuario = async (e: React.FormEvent) => {
@@ -42,7 +55,7 @@ export default function AdminPage() {
         alert("Erro no servidor: " + data.error);
       } else if (data.usuario) {
         setNome("");
-        carregarUsuarios();
+        carregarUsuarios(); // Atualiza a lista na mesma hora após cadastrar
       }
     } catch (error) {
       alert("Erro ao conectar com a API.");
@@ -59,7 +72,18 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-white text-black p-4 md:p-8 font-sans">
       <div className="max-w-5xl mx-auto">
-        <h1 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">Painel do Administrador</h1>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Painel do Administrador</h1>
+          
+          {/* Botão de atualização manual */}
+          <button 
+            onClick={carregarUsuarios}
+            disabled={atualizando}
+            className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded font-semibold transition disabled:opacity-50 border border-gray-300"
+          >
+            {atualizando ? "⏳ Atualizando..." : "🔄 Atualizar Agora"}
+          </button>
+        </div>
         
         <form onSubmit={cadastrarUsuario} className="mb-8 flex flex-col sm:flex-row gap-4">
           <input
@@ -87,8 +111,8 @@ export default function AdminPage() {
               <tr>
                 <th className="p-3 border-b border-gray-200">Nome</th>
                 <th className="p-3 border-b border-gray-200">ID</th>
-                <th className="p-3 border-b border-gray-200">Localização</th>
-                <th className="p-3 border-b border-gray-200">Ação</th>
+                <th className="p-3 border-b border-gray-200 text-center">Localização</th>
+                <th className="p-3 border-b border-gray-200 text-center">Ação</th>
               </tr>
             </thead>
             <tbody>
@@ -98,24 +122,24 @@ export default function AdminPage() {
                   <td className="p-3 border-b border-gray-200 text-sm text-gray-500 max-w-[80px] truncate">
                     {user.id}
                   </td>
-                  <td className="p-3 border-b border-gray-200">
+                  <td className="p-3 border-b border-gray-200 text-center">
                     {user.latitude && user.longitude ? (
                       <a 
                         href={`https://www.google.com/maps/search/?api=1&query=${user.latitude},${user.longitude}`} 
                         target="_blank" 
                         rel="noreferrer"
-                        className="text-blue-600 underline text-sm font-semibold hover:text-blue-800"
+                        className="inline-flex items-center gap-1 bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1.5 rounded-full text-sm font-bold transition"
                       >
-                        📍 Ver no Google Maps
+                        📍 Abrir Mapa
                       </a>
                     ) : (
-                      <span className="text-orange-500 text-sm font-medium">Aguardando...</span>
+                      <span className="text-orange-500 text-sm font-medium animate-pulse">Aguardando...</span>
                     )}
                   </td>
-                  <td className="p-3 border-b border-gray-200">
+                  <td className="p-3 border-b border-gray-200 text-center">
                     <button 
                       onClick={() => copiarLink(user.id)}
-                      className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded text-sm transition w-full sm:w-auto font-bold shadow-sm"
+                      className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm transition font-bold shadow-sm"
                     >
                       Copiar Link
                     </button>
